@@ -1,0 +1,5 @@
+# Entorno Virtual de Python (archivos grandes y generados)
+venv/
+
+# Variables de Entorno (Contiene secretos y credenciales)
+.env
