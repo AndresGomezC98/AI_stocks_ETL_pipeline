@@ -57,6 +57,12 @@ Data Source Constraints (Critical Resilience)
 
 The API provider imposes a strict limitation of 25 requests per day. This constraint is the primary driver for the design of the extraction layer, necessitating an incremental and idempotent loading mechanism to protect the pipeline from exhausting its daily quota.
 
+### **3.4 📐 Database Architecture
+
+The design uses an optimized Star Schema with composite keys in the fact tables.
+
+![Entity-Relationship Diagram (ERD) of the Star Schema](assets/schema_erd.png)
+
 ## **4. Project Status and Roadmap**
 
 The project is being developed using the Scrum framework, executed across three distinct one-week sprints. Detailed management artifacts, including the Product Backlog, User Stories, and the complete Definition of Done (DoD), are maintained in Azure Boards.
