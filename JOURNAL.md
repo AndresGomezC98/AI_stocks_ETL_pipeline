@@ -13,3 +13,23 @@ Porject starts with developing of file settings and in this file I can learn som
         if we don't find a key value it isn't a string.
 
 3. I created a list with main tickers for my project this tickers are main for AI field and at last of list we are use a one stock that doesn't belong to AI field but is a great and solid company in market this is to compare the bubble of AI. 
+
+### CONTINUE DEVELOP PROJECT 11/15/2025
+
+📝 AB#202: Price Extraction Logic & Project ArchitectureThis task focused on creating a robust, modular function (extract_prices_weekly) to fetch historical data from Alpha Vantage, integrating essential professional Python architecture and testing practices.
+
+🐍 Core Function Logic & Error HandlingComponentAction TakenKey LearningModularityDefined extract_prices_weekly(ticket: str).
+
+The function handles only one task (fetch one ticker) to be easily reusable and testable.
+
+API RequestBuilt URL using f-strings and performed the call with requests.get().F-strings are the standard way to inject variables cleanly into URLs.
+
+Connection SafetyUsed a try...except block around the API call.This captures low-level network failures (e.g., timeout or no internet connection).API Error CheckImplemented response.raise_for_status().This is the professional standard for handling HTTP errors (like 403 or 404) returned by the server, ensuring we only proceed if the status is successful (2xx).
+
+Return ValueConverted the response with data = response.json() and used return data.Confirmed that requests.json() converts the API string directly into a usable Python dictionary (dict).
+
+🏛️ Architectural Learnings & TestingConceptExplanationPractical FixPackage RecognitionPython needs __init__.py files (the "package passport" 🛂) inside folders (config/, src/) to recognize them as importable modules. Without them, imports fail.Must be maintained in all source directories (config/, src/, src/extract/).
+
+Import ErrorThe ModuleNotFoundError occurs when Python runs a deep file (extract.py) and cannot look "up" to find sibling packages (like config).The file structure was correct, but the execution was wrong.Professional ExecutionThe command python -m package.module (e.g., python -m src.extract.extract) forces Python to start searching for packages from the project root, solving the import issue.Use python -m for all package executions from the root.
+
+Unit TestingThe if __name__ == "__main__": block is used to create temporary, isolated tests.It allows us to confirm the function works before integrating it into main.py.
