@@ -14,5 +14,5 @@ AI_TICKERS={
 
 
 list_AI_tickers=list(AI_TICKERS.keys())
-print(list_AI_tickers)
+
 

@@ -16,4 +16,4 @@ DB_DATABASE: str= os.getenv('DB_DATABASE')
 
 # We create a list of our ten main stocks of AI to follow with API 
 
-AI_TICKERS:list[str]=[ 'NVDA', 'MSFT', 'AMD', 'PLTR', 'META', 'GOOGL', 'ADBE', 'TSLA', 'AMZN', 'QQQ']
+#AI_TICKERS:list[str]=[ 'NVDA', 'MSFT', 'AMD', 'PLTR', 'META', 'GOOGL', 'ADBE', 'TSLA', 'AMZN', 'QQQ']
