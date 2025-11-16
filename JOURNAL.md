@@ -33,3 +33,33 @@ Return ValueConverted the response with data = response.json() and used return d
 Import ErrorThe ModuleNotFoundError occurs when Python runs a deep file (extract.py) and cannot look "up" to find sibling packages (like config).The file structure was correct, but the execution was wrong.Professional ExecutionThe command python -m package.module (e.g., python -m src.extract.extract) forces Python to start searching for packages from the project root, solving the import issue.Use python -m for all package executions from the root.
 
 Unit TestingThe if __name__ == "__main__": block is used to create temporary, isolated tests.It allows us to confirm the function works before integrating it into main.py.
+
+
+
+
+📝 Project Journal Entry: Tasks AB#202 & AB#101 ReviewI. Task AB#202:
+ Price Extraction (Refactoring and Testing)Objective: 
+
+Create a modular and robust function to extract weekly adjusted stock prices from the Alpha Vantage API.
+
+Concept ImplementationKey LearningAPI CallFunction extract_prices_weekly(ticker: str) was finalized, correctly integrating the AV_API_KEY from config.settings.Modularity is essential. 
+
+The function takes only the ticker as input, making it easily reusable.URL SyntaxUsed f-strings to construct the API URL with the correct parameters (function, symbol, apikey).f-strings (f"...") provide the cleanest and most readable way to inject variables into strings.
+
+HTTP Error HandlingUsed response.raise_for_status().This is the professional standard for immediate error detection. It automatically raises an exception if the API returns a non-200 status code (e.g., 404, 500), stopping the process and preventing bad data.
+
+Success ConfirmationThe function was successfully tested and returned dict_keys(['Meta Data', 'Weekly Adjusted Time Series']), confirming connection and data format.
+
+II. Core Python Architecture & Execution
+This section addresses the crucial ModuleNotFoundError encountered during testing.
+
+Concept Explanation Why It’s Important The __init__.py File This file (which can be empty) acts as a "package passport" 🛂. Python only recognizes a directory (config/, src/database/) as an importable package if this file is present.Without it, Python cannot navigate your project structure to find modules like settings.py or connection.py when executing from a nested folder.
+
+The python -m Command Standard execution (python src/file.py) only knows its current location. python -m src.module.file (using dots instead of slashes) forces Python to treat the project's root folder as the starting point.This correctly resolves all absolute imports (e.g., from config.settings import...), allowing the program to find sibling packages from anywhere.
+III. Advanced Patterns: Security and Resource Management
+In Task AB#101 (Idempotency), we implemented patterns crucial for secure and reliable database interaction.
+1. The try...finally Block (Resource Safety) 🔒Problem: If an error occurs (e.g., a network crash) after opening a database connection, the connection remains open, leading to resource leaks on the database server.Solution: The finally block contains code that executes guaranteed, regardless of whether the try block succeeded or failed.Implementation: We placed the essential cleanup (cursor.close() and connection.close()) inside finally to ensure resources are released after every use.
+
+2. Scope and Safe Closing (connection = None)We initialized connection = None and cursor = None before the try block.Why? If the try block fails before creating the connection object, the finally block still needs to reference those variables. By initializing them to None, we safely use the conditional check: if connection: connection.close(). This prevents a crash if the resource was never successfully opened.
+
+3. SQL Parameterization (Security) 🛡️Problem: Directly injecting a variable (like ticker) into a SQL string (WHERE ticker_id = '{ticker}') creates a security vulnerability called SQL Injection.Solution: We used the standard SQL parameter marker %s in the query string and passed the variable separately as a tuple ((ticket,)) in the cursor.execute() method.Key Learning: This separates the code from the data, ensuring the variable is treated purely as a value, making the query safe and functional.
