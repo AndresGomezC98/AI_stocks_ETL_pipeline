@@ -1,8 +1,8 @@
 #Module of transform initial data from extract prices.py
 from datetime import date,timedelta,datetime
 import polars as pl 
-schema_i={"ticker_id":pl.String,"date_key":pl.Date,"open_price":pl.Float64,"high_price":pl.Float64,"low_price":pl.Float64,"close_price":pl.Float64,"volume":pl.Int64}
-def transform_plain_dict_price (ticker:str,data:dict):
+schema_i={"ticker_id":pl.Int64,"date_key":pl.Date,"open_price":pl.Float64,"high_price":pl.Float64,"low_price":pl.Float64,"close_price":pl.Float64,"volume":pl.Int64}
+def transform_plain_dict_price (ticker_id:int,data:dict):
     clean_data_list=list()
     for x,price in data.items():
         clean_data=dict()
@@ -20,7 +20,7 @@ def transform_plain_dict_price (ticker:str,data:dict):
         close_f=float(close)
         volume_f=int(volume)
 
-        clean_data["ticker_id"]=ticker
+        clean_data["ticker_id"]=ticker_id
         clean_data["date_key"]= date_x
         clean_data["open_price"]=open_f
         clean_data["high_price"]=high_f

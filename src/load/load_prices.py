@@ -5,21 +5,24 @@ import polars as pl
 from database.querys import query_to_load
 
 
-def load_historical_prices(connection_db, price_data:pl.Lazyframe):
+def load_historical_prices( price_data:pl.Lazyframe):
     try:
 
         data_to_load= price_data.collect()
         data_row=data_to_load.rows()
 
-
-        cur=connection_db.cursor()
+        connection=get_db_connection()
+        cur=connection.cursor()
 
         query=query_to_load
         cur.executemany(query,data_row)
-        connection_db.commit()
+        connection.commit()
+    except Exception as e:
+        connection.rollback()
+        raise e
 
     finally:
         if cur:
             cur.close()
-        if connection_db:
-            connection_db.close()
+        if connection:
+            connection.close()
