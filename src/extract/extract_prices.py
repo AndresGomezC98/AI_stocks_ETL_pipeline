@@ -2,6 +2,8 @@ import requests
 from config.settings import AV_API_KEY
 from src.database.querys import get_last_price_ticket
 from datetime import date,timedelta,datetime
+from database.connection import get_db_connection
+from database.querys import query_date_max
 frecuency="TIME_SERIES_WEEKLY_ADJUSTED"
 
 def extract_prices_weekly(ticket:str):
@@ -35,6 +37,25 @@ def extract_prices_weekly(ticket:str):
         
         return data
         
+
+
+def get_last_price_ticket(ticket:str):
+    connection=None
+    cur= None
+    try:
+        ticket_to_find=(ticket,)
+        connection= get_db_connection()
+        cur= connection.cursor()
+        query = query_date_max
+        cur.execute(query,ticket_to_find)
+        data=cur.fetchone()
+        return data
+    finally:
+        # 2. Gestión de Recursos: Cerrar SIEMPRE
+        if cur:
+            cur.close()
+        if connection:
+            connection.close()
 
 
 
