@@ -63,3 +63,41 @@ In Task AB#101 (Idempotency), we implemented patterns crucial for secure and rel
 2. Scope and Safe Closing (connection = None)We initialized connection = None and cursor = None before the try block.Why? If the try block fails before creating the connection object, the finally block still needs to reference those variables. By initializing them to None, we safely use the conditional check: if connection: connection.close(). This prevents a crash if the resource was never successfully opened.
 
 3. SQL Parameterization (Security) 🛡️Problem: Directly injecting a variable (like ticker) into a SQL string (WHERE ticker_id = '{ticker}') creates a security vulnerability called SQL Injection.Solution: We used the standard SQL parameter marker %s in the query string and passed the variable separately as a tuple ((ticket,)) in the cursor.execute() method.Key Learning: This separates the code from the data, ensuring the variable is treated purely as a value, making the query safe and functional.
+
+### 🗓️ Date: [23/11/2025]
+### 🎯 Topic: Finalizing ETL Pipeline & Implementing Robust Load (L) Layer
+
+Today's focus was on connecting all ETL pieces (E, T, L) into a unified and transactional pipeline, solving the critical dependency on the `dim_ticker` dimension table.
+
+#### 1. Dimension Management: The UPSERT Pattern 🔑
+
+The core learning was how to **infer and manage dimension keys** within the ETL process, specifically for the `dim_ticker` table.
+
+* **Problem:** The Transformation (T) layer requires an integer `ticker_id`, but the Extraction (E) layer only has the string symbol (`ticker`).
+* **Solution (UPSERT Logic):** We implemented `get_or_create_ticker_id` in `db_services.py` using a simple application-level pattern:
+    1.  `SELECT`: Attempt to retrieve the `ticker_id` using the symbol.
+    2.  `IF None`: If the result is `None` (new ticker), execute `INSERT INTO dim_ticker(ticker_symbol) VALUES (%s);`.
+    3.  `COMMIT` & `SELECT Again`: We execute `connection.commit()` to confirm the new row and immediately perform the `SELECT` again to retrieve the newly generated `AUTO_INCREMENT` ID.
+
+#### 2. Transactional Robustness and Connection Handling 🔗
+
+We refactored the Load (L) layer for maximum robustness and modularity.
+
+* **Internal vs. External Connection:**
+    * **External (Initial Design):** Passing the `connection` object to the load function (e.g., `load_data(conn, data)`). This is efficient for massive bulk operations but makes the orchestrator (`main.py`) responsible for opening and safely closing a single connection.
+    * **Internal (Final Design):** The load function calls `get_db_connection()` internally. This simplifies the orchestrator (no need to pass the connection) and ensures **each load operation safely opens and closes its own resources** (cursor and connection).
+* **Transactional Integrity (`try/except/finally`):** This structure is essential for database operations:
+    * `try`: Execute `cur.execute(...)` and **`connection.commit()`** (success).
+    * `except Exception as e`: If any error occurs, execute **`connection.rollback()`** to ensure no partial transaction remains in the DB, and then **`raise e`** to halt the pipeline and notify the orchestrator.
+    * `finally`: **Always** ensures the `cur.close()` and `connection.close()` methods are called, regardless of success or failure.
+
+#### 3. Handling Cursor Output 🧠
+
+A crucial distinction when interacting with the cursor (`cur`):
+
+* `cur.execute(SELECT ...)`: Returns the **number of rows** affected or selected (usually 0 or 1).
+* `cur.fetchone()`: Must be called *after* `cur.execute` for a `SELECT` query to retrieve the actual data (a tuple) or `None` if no row was found.
+
+#### 4. Polars LazyFrame and Type Coercion
+
+* Confirmed that Polars `LazyFrame` successfully handles the explicit schema definition (e.g., `pl.Int64`, `pl.Date`) and strict data quality validation (e.g., `pl.col("pe_ratio") < 0`) before the data is materialized and loaded, ensuring strong **Data Quality**.
