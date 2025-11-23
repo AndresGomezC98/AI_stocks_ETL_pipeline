@@ -1,6 +1,5 @@
 import requests
 from config.settings import AV_API_KEY
-from src.database.querys import get_last_price_ticket
 from datetime import date,timedelta,datetime
 from database.connection import get_db_connection
 from database.querys import query_date_max
