@@ -19,7 +19,7 @@ jobs:
             - name: create venv
               run: python -m venv venv
             - name: install dependencies
-              run: pip install -r requirements.txt
+              run: ./venv/bin/pip install -r requirements.txt
         
             - name: run pipeline ETL
               run: export PYTHONPATH=$PWD && chmod +x run_etl.sh && ./run_etl.sh
