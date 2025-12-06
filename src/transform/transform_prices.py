@@ -32,12 +32,15 @@ def transform_plain_dict_price (ticker_id:int,data:dict):
 
 
     data_f= pl.DataFrame(clean_data_list, schema=schema_i).lazy()
+    data_sort= data_f.sort("date_key")
+    df_with_retunrs=data_sort.with_columns([pl.col("close_price").pct_change().alias("weekly_return")])
+    df_final=df_with_retunrs.with_columns([pl.col("weekly_return").rolling_std(window_size=20).alias("Volatility").fill_null(value=0.0)])
     bad_data=(pl.col("open_price")<= 0) | (pl.col("high_price")<= 0) | (pl.col("low_price")<= 0) | (pl.col("close_price")<= 0) | (pl.col("volume")<= 0) 
-    is_violation= data_f.select(bad_data.any()).collect().item()
+    is_violation= df_final.select(bad_data.any()).collect().item()
     if is_violation:
         raise ValueError (" Data is already infect with values incorrect to our database")
     else:
-        return data_f
+        return df_final
 
 
 
