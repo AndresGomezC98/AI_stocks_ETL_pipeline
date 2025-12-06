@@ -6,4 +6,16 @@ on:
         - cron: '0 0 * * 1'
 jobs:
     run_etl:
-        runs-on: ubuntu_lastest
+        runs-on: ubuntu-lastest
+        steps:
+            - name: checkout code
+              uses: actions/checkout@v4
+            - name: setup python
+              uses: actions/setup-python@v5
+              with:
+                python-version: '3.12.3'
+            - name: install dependencies
+              run: pip install -r requirements.txt
+            
+            - name: run pipeline ETL
+              run: chmod +x run_etl_sh && ./run_etl.sh 
