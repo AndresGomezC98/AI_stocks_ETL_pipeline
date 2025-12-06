@@ -1,0 +1,9 @@
+name: Runnning of ETL project weekly
+
+on: 
+    schedule:
+        # all monday at 12:00 am to fact historical prices
+        - cron: '0 0 * * 1'
+jobs:
+    run_etl:
+        runs-on: ubuntu_lastest
