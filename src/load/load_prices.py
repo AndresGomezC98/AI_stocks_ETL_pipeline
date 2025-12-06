@@ -5,7 +5,7 @@ import polars as pl
 from database.querys import query_to_load
 
 
-def load_historical_prices( price_data:pl.Lazyframe):
+def load_historical_prices( price_data:pl.LazyFrame):
     try:
 
         data_to_load= price_data.collect()

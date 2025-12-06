@@ -2,7 +2,7 @@ name: Runnning of ETL project weekly
 
 on: 
     push: 
-        branches: [main] 
+        branches: [main,develop] 
     schedule:
         # all monday at 12:00 am to fact historical prices
         - cron: '0 0 * * 1'
