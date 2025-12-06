@@ -6,7 +6,7 @@ on:
         - cron: '0 0 * * 1'
 jobs:
     run_etl:
-        runs-on: ubuntu-lastest
+        runs-on: ubuntu-latest
         steps:
             - name: checkout code
               uses: actions/checkout@v4
