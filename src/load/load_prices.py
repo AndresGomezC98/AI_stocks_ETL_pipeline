@@ -10,7 +10,11 @@ def load_historical_prices( price_data:pl.LazyFrame):
 
         data_to_load= price_data.collect()
         data_row=data_to_load.rows()
-
+        # DEBUG: Verificar el tamaño de la primera fila
+        '''if data_row:
+            print(f"DEBUG: Longitud de la primera fila de datos: {len(data_row[0])}")
+            print(f"DEBUG: La consulta SQL espera: {query.count('%s')} parámetros")
+        '''
         connection=get_db_connection()
         cur=connection.cursor()
 

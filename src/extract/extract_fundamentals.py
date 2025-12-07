@@ -6,7 +6,7 @@ from database.db_services import get_last_quarter_fundamentals
 
 def extract_fundamentals(ticket:str):
     data_final=dict()
-    date= get_last_quarter_fundamentals(ticket)
+    date_ini= get_last_quarter_fundamentals(ticket)
     functionF="OVERVIEW"
     URL="https://www.alphavantage.co/query"
     URL_API=f"{URL}?function={functionF}&symbol={ticket}&apikey={AV_API_KEY}"
@@ -15,15 +15,29 @@ def extract_fundamentals(ticket:str):
     except:
         raise Exception("connection fail, check and try again")
 
-    response.raise_for_status()
-    data_fundamentals=response.json()
+    try:
 
-    if date[0] is None:
+        response.raise_for_status()
+        data_fundamentals=response.json()
+        data_raw=data_fundamentals["LatestQuarter"]
+    except KeyError:
+        print(f"⚠️ Alerta: El ticket {ticket} no tiene la clave 'LatestQuarter'. Saltando...")
+        return None  # Devolvemos None si no hay datos.
+    except requests.exceptions.HTTPError as e:
+        print(f"❌ Error HTTP para {ticket}: {e}. Saltando...")
+        return None
+    except Exception as e:
+        # Otros errores (como JSON vacío, etc.)
+        print(f"❌ Error inesperado al extraer fundamentales para {ticket}: {e}. Saltando...")
+        return None
+
+
+    if date_ini[0] is None:
         start_date_quearter=date(2020,1,1)
     else:
-        start_date_quearter=date[0]
+        start_date_quearter=date_ini[0]
 
-    data_raw=data_fundamentals["LatestQuarter"]
+    #data_raw=data_fundamentals["LatestQuarter"]
     date_data_raw= datetime.strptime(data_raw,'%Y-%m-%d').date()
     if date_data_raw <= start_date_quearter:
         return data_final

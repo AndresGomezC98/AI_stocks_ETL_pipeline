@@ -3,7 +3,9 @@ from datetime import date, timedelta,datetime
 
 def transform_fundamentals_plain(ticker_id:int,data_fundamentals:dict):
     if data_fundamentals is None:
-        pass
+        data_empty=pl.DataFrame().lazy()
+        return data_empty
+        
     else:
         schema_i={"ticker_id":pl.Int64,"reporting_date":pl.Date,"market_capitalization":pl.Int64,"pe_ratio":pl.Float64,"peg_ratio":pl.Float64,"EPS":pl.Float64,"forwardPE":pl.Float64}
         clean_data_list =list()

@@ -1,4 +1,5 @@
 import requests
+import time
 from config.settings import AV_API_KEY
 from datetime import date,timedelta,datetime
 from database.db_services import get_last_price_ticket
@@ -7,6 +8,7 @@ frecuency="TIME_SERIES_WEEKLY_ADJUSTED"
 def extract_prices_weekly(ticket:str):
         data=dict()
         last_price=get_last_price_ticket(ticket)
+        time.sleep(20.0)
         URL= "https://www.alphavantage.co/query"
         URL_final= f"{URL}?function={frecuency}&symbol={ticket}&apikey={AV_API_KEY}"
         try:
@@ -15,6 +17,11 @@ def extract_prices_weekly(ticket:str):
                 raise Exception(" la conexion fallo con la API")
         response.raise_for_status()
         initial_data=response.json()
+        '''# --- INSERTA ESTAS LÍNEAS TEMPORALES ---
+        print("DEBUG: Contenido devuelto por Alpha Vantage:")
+        print(initial_data)
+        exit() 
+        # ----------------------------------------'''
         if last_price[0] is None:
                 start_date=date(2020,1,1)
                 

@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS fact_historical_prices (
   high_price FLOAT NOT NULL,
   low_price FLOAT NOT NULL,
   close_price FLOAT NOT NULL,
-  volume INT NOT NULL,
-  volatility FLOAT,
+  volume BIGINT NOT NULL,
+  Volatility FLOAT,
   
   -- CLAVE COMPUESTA: Combina el "qué" y el "cuándo" para la unicidad
   PRIMARY KEY (ticker_id, date_key),

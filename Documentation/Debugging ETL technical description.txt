@@ -1,0 +1,89 @@
+📝 Technical Report: ETL Pipeline Optimization and Debugging (Stocks AI)
+Date: December 7, 2025 Objective: Stabilize the Extraction, Transformation, and Load (ETL) flow for historical and fundamental stock data. Technologies: Python, Polars, MySQL, Alpha Vantage API.
+
+1. Database Data Integrity
+🐛 Bug: Not all parameters were used / NOT NULL Violation
+The Problem: The script failed when inserting data because the Alpha Vantage API sometimes returned gaps in information (non-trading days or errors), resulting in None or NaN values. MySQL rejected these values because the columns were defined as NOT NULL.
+
+The Solution: We implemented data cleaning in transform.py using Polars:
+
+Python
+
+data_f_cleaned = data_f.fill_null(0.0)
+💡 The Why (Engineering): In relational databases, consistency is king. We cannot allow a null value to break a bulk insertion. Using .fill_null(0.0) acts as a "safety net," ensuring we always send a valid numeric data type (float) that satisfies the SQL schema constraint.
+
+🐛 Bug: Out of range value for column 'volume'
+The Problem: When attempting to load data, MySQL threw a range error. The transaction volume for large companies (like NVDA) exceeds the limit of a standard integer (INT, max ~2.1 billion).
+
+The Solution: We modified the schema (schema.sql) by changing the data type for volume:
+
+From: INT
+
+To: BIGINT
+
+💡 The Why (Engineering): Data modeling requires anticipating scale. A BIGINT in MySQL uses 8 bytes and allows for astronomical values, ensuring the system doesn't fail during market volume spikes.
+
+🐛 Bug: Duplicate entry for key 'PRIMARY'
+The Problem: By running the script multiple times for testing, we attempted to insert records (Ticker + Date) that already existed. The database stopped the process to protect the uniqueness of the Primary Key.
+
+The Solution: We implemented the UPSERT pattern in database/querys.py:
+
+SQL
+
+INSERT INTO ... VALUES (...)
+ON DUPLICATE KEY UPDATE
+open_price = VALUES(open_price), ...
+💡 The Why (Engineering): This makes our ETL Idempotent. It means you can run the script 1 or 1000 times, and the final state of the database will always be correct (updated data), without duplicates and without interruption errors.
+
+2. Python - SQL Compatibility
+🐛 Bug: Date Serialization (InterfaceError)
+The Problem: The MySQL connector (mysql-connector-python) struggled to convert Python datetime.date objects within a massive batch (executemany).
+
+The Solution: We forced the date format to string during the transformation phase:
+
+Python
+
+pl.col("date_key").dt.strftime("%Y-%m-%d")
+💡 The Why (Engineering): Although modern libraries are smart, the safest way to pass dates between systems (Python -> SQL) is using the ISO 8601 standard (YYYY-MM-DD) as a string. It removes any ambiguity in interpretation by the driver.
+
+🐛 Bug: Python type tuple cannot be converted
+The Problem: In the fundamentals load, we tried to use cur.execute() by passing it a list of 500 rows. execute() expects a single row.
+
+The Solution: We switched the method to cur.executemany() and ensured we converted the Polars data to a list of tuples using .rows().
+
+Additional fix: We changed .row() (singular, Polars error) to .rows() (plural).
+
+💡 The Why (Engineering): executemany is optimized for batch operations. Instead of making 500 network trips to the database (slow), it sends all data in a single packet, drastically reducing latency.
+
+3. Programming Logic & Robustness
+🐛 Bug: Name Conflict (TypeError: 'tuple' object is not callable)
+The Problem: We had a variable named date that shadowed the import of the class from datetime import date. Python tried to use the variable (a tuple) as if it were the constructor function.
+
+The Solution: We renamed the variable to date_ini (or last_date).
+
+💡 The Why (Engineering): Variable Shadowing is a common but dangerous error. We must always avoid using reserved words or standard library names (list, dict, date) for our local variables.
+
+🐛 Bug: API Limit (Intermittent KeyError)
+The Problem: The script failed randomly when looking for keys in the JSON. The cause was exceeding Alpha Vantage's limit of 5 requests per minute, and the API returned an error message instead of data.
+
+The Solution: We added a strategic pause in extract_prices.py:
+
+Python
+
+import time
+time.sleep(20) # Safety pause
+💡 The Why (Engineering): Respecting Rate Limits is crucial when working with third-party APIs. Without this control, the service blocks us (ban) or our pipeline becomes unstable. 20 seconds gives us a safe margin (3 requests/minute).
+
+4. Handling Edge Cases (Defensive Coding)
+🐛 Bug: Missing Data in ETFs (QQQ - KeyError: LatestQuarter)
+The Problem: The ETF "QQQ" does not have fundamental metrics (P/E Ratio, etc.). The API did not return the LatestQuarter key, breaking the script.
+
+The Solution: We implemented a complete defensive architecture:
+
+Extract: try...except KeyError block that returns None if the key is missing.
+
+Transform: Validation if data is None that returns an empty pl.LazyFrame().
+
+Load: The loader receives the empty frame and does nothing, without failing.
+
+💡 The Why (Engineering): A good Data Engineer assumes that data will always arrive dirty or incomplete. Instead of letting the pipeline die ("fail hard"), we design the system to log the issue, skip it, and continue processing the rest of the data ("fail safe" or "graceful degradation").

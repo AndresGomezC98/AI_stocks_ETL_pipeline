@@ -1,7 +1,7 @@
 #Module of transform initial data from extract prices.py
 from datetime import date,timedelta,datetime
 import polars as pl 
-schema_i={"ticker_id":pl.Int64,"date_key":pl.Date,"open_price":pl.Float64,"high_price":pl.Float64,"low_price":pl.Float64,"close_price":pl.Float64,"volume":pl.Int64}
+schema_i={"ticker_id":pl.Int64,"date_key":pl.Date,"open_price":pl.Float64,"high_price":pl.Float64,"low_price":pl.Float64,"close_price":pl.Float64,"volume":pl.Int64,"Volatility":pl.Float64}
 def transform_plain_dict_price (ticker_id:int,data:dict):
     clean_data_list=list()
     for x,price in data.items():
@@ -27,12 +27,14 @@ def transform_plain_dict_price (ticker_id:int,data:dict):
         clean_data["low_price"]=low_f
         clean_data["close_price"]=close_f
         clean_data["volume"]=volume_f
+        
 
         clean_data_list.append(clean_data)
 
 
     data_f= pl.DataFrame(clean_data_list, schema=schema_i).lazy()
-    data_sort= data_f.sort("date_key")
+    data_f_cleaned = data_f.fill_null(0.0)
+    data_sort= data_f_cleaned.sort("date_key")
     df_with_retunrs=data_sort.with_columns([pl.col("close_price").pct_change().alias("weekly_return")])
     df_final=df_with_retunrs.with_columns([pl.col("weekly_return").rolling_std(window_size=20).alias("Volatility").fill_null(value=0.0)])
     bad_data=(pl.col("open_price")<= 0) | (pl.col("high_price")<= 0) | (pl.col("low_price")<= 0) | (pl.col("close_price")<= 0) | (pl.col("volume")<= 0) 
@@ -40,7 +42,7 @@ def transform_plain_dict_price (ticker_id:int,data:dict):
     if is_violation:
         raise ValueError (" Data is already infect with values incorrect to our database")
     else:
-        return df_final
+        return df_final.select(["ticker_id",pl.col("date_key").dt.strftime("%Y-%m-%d").alias("date_key"),"open_price","high_price","low_price","close_price","volume","Volatility"])
 
 
 

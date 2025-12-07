@@ -6,11 +6,11 @@ import polars as pl
 def load_fundamental_indicators (data:pl.LazyFrame):
     try:
         data_to_load =data.collect()
-        data_row =data_to_load.row()
+        data_row =data_to_load.rows()
         connection=get_db_connection()
         cur =connection.cursor()
 
-        cur.execute(query_to_load_fundamentals,data_row)
+        cur.executemany(query_to_load_fundamentals,data_row)
         connection.commit()
 
     except Exception as e:

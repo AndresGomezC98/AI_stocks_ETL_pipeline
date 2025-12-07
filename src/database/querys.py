@@ -16,8 +16,15 @@ query_date_max_fundamentals = '''
 #QUERY TO LOAD PRICES HISTORY
 
 query_to_load=('''
-        INSERT INTO fact_historical_prices(ticker_id,date_key,open_price,high_price,low_price,close_price,volume) 
-        VALUES(%s,%s,%s,%s,%s,%s,%s)
+    INSERT INTO fact_historical_prices(ticker_id,date_key,open_price,high_price,low_price,close_price,volume,Volatility) 
+    VALUES(%s,%s,%s,%s,%s,%s,%s,%s)
+    ON DUPLICATE KEY UPDATE
+        open_price = VALUES(open_price),
+        high_price = VALUES(high_price),
+        low_price = VALUES(low_price),
+        close_price = VALUES(close_price),
+        volume = VALUES(volume),
+        Volatility = VALUES(Volatility)
         ''')
         
 # QUERY TO LOAD FUNDAMENTALS
@@ -25,6 +32,12 @@ query_to_load=('''
 query_to_load_fundamentals=('''
                             INSERT INTO fact_fundamentals(ticker_id,reporting_date,market_capitalization,pe_ratio,peg_ratio,EPS,forwardPE)
                             VALUES(%s,%s,%s,%s,%s,%s,%s)
+                            ON DUPLICATE KEY UPDATE
+                                market_capitalization= VALUES(market_capitalization),
+                                pe_ratio= VALUES(pe_ratio),
+                                peg_ratio= VALUES(peg_ratio),
+                                EPS= VALUES(EPS),
+                                forwardPE= VALUES(forwardPE) 
                             ''')
       
 

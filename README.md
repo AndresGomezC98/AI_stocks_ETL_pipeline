@@ -63,18 +63,84 @@ The design uses an optimized Star Schema with composite keys in the fact tables.
 
 ![Entity-Relationship Diagram (ERD) of the Star Schema](assets/schema_erd.png)
 
-## **4. Project Status and Roadmap**
+## **4. 📐 Database Architecture**
+The design uses an optimized Star Schema with composite keys in the fact tables.
+
+dim_ticker: Central dimension table defining the assets tracked.
+
+fact_historical_prices: Time series data, linked via ticker_id and date_key. (Note: The volume column has been configured as BIGINT in the schema to prevent overflow errors from high-volume stocks).
+
+fact_fundamental_indicators: Quarterly corporate data, linked via ticker_id and reporting_date.
+
+Idempotency: All loading operations utilize UPSERT (ON DUPLICATE KEY UPDATE) to ensure the pipeline can be re-run without creating duplicate records.
+
+## **🚀 5. Getting Started (User Guide)**
+Follow these instructions to set up and run the project locally.
+
+## **5.1 Prerequisites**
+Python 3.10 or higher.
+
+MySQL Server (running locally or remotely).
+
+A free API Key from Alpha Vantage.
+
+## **5.2 Installation**
+Clone the repository and install dependencies:
+
+git clone <YOUR_REPOSITORY_URL>
+cd Main_Stocks_AI_Project
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+## **5.3 Configuration & Security (.env)**
+⚠️ CRITICAL: Database credentials and API keys must not be committed to Git.
+
+1.  Create a file named .env in the project root directory.
+
+2.  Populate it with your specific credentials:
+
+# Database Configuration
+DB_HOST=localhost
+DB_USER=etl_user
+DB_PASSWORD=your_secure_password
+DB_NAME=AI_stocks
+DB_PORT=3306
+
+# API Configuration
+AV_API_KEY=YOUR_ALPHA_VANTAGE_API_KEY
+
+## **5.4 Database Setup**
+The schema must be initialized before the first run.
+
+1.  Ensure the AI_stocks database exists and the ETL user has access.
+
+2.  Initialize the tables (this creates the dim_ticker, fact_historical_prices, and fact_fundamental_indicators tables):
+
+mysql -u etl_user -p AI_stocks < database/schema.sql
+
+3.  Populate dim_ticker: Insert the symbols you wish to monitor (e.g., NVDA, MSFT, QQQ, etc.). This step is mandatory before running the ETL
+
+## **5.5 Execution** 
+
+Run the complete ETL pipeline from the project root:
+
+python3 src/main.py
+
+Execution Time: Due to API rate limiting, the script executes with a 20-second delay between ticker requests, resulting in a total runtime of approximately 3-4 minutes for 10 assets.
+
+## **6. Project Status and Roadmap**
 
 The project is being developed using the Scrum framework, executed across three distinct one-week sprints. Detailed management artifacts, including the Product Backlog, User Stories, and the complete Definition of Done (DoD), are maintained in Azure Boards.
 
-### **4.1 Definition of Done (DoD) Criteria**
+### **6.1 Definition of Done (DoD) Criteria**
 
 For any task to be considered complete, it must meet the following technical criteria:
 1.  Successful execution within the GitHub Actions Workflow (CI/CD).
 2.  Robust error handling implemented using `try/except` blocks within the Python code.
 3.  Successful completion of the entire Extract-Transform-Load (ETL) cycle.
 
-### **4.2 Future Roadmap (V2.0)**
+### **6.2 Future Roadmap (V2.0)**
 
 Future planned enhancements focus on scalability and advanced monitoring:
 *   **Observability:** Implement structured logging and dedicated monitoring (metrics, alerts) to track pipeline health beyond basic CI/CD logs.
